@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const lineStyleBase = {
   padding: '0.2rem 0.6rem',
@@ -21,6 +21,12 @@ const DiffEditor = ({ leftText, rightText, diffResult }) => {
   const [formatInput, setFormatInput] = useState('');
   const [formatOutput, setFormatOutput] = useState('');
   const [copiedTarget, setCopiedTarget] = useState(null);
+
+  useEffect(() => {
+    if (formatInput.trim() === '') {
+      setFormatOutput('');
+    }
+  }, [formatInput]);
 
   const formatAsJson = () => {
     const text = formatInput.trim();
