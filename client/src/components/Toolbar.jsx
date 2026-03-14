@@ -12,7 +12,7 @@ const Toolbar = ({ onCompare, onClear }) => {
         borderBottom: '1px solid #e5e7eb'
       }}
     >
-      <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a' }}>Diffchecker Clone</div>
+      <div style={{ fontWeight: 700, fontSize: '1.1rem', color: '#0f172a' }}>Diffchecker By Ti Dao</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <button
           onClick={onClear}

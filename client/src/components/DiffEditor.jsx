@@ -23,21 +23,59 @@ const DiffEditor = ({ leftText, rightText, diffResult }) => {
   const [copiedTarget, setCopiedTarget] = useState(null);
 
   const formatAsJson = () => {
+    const text = formatInput.trim();
+    if (!text) {
+      setFormatOutput('');
+      return;
+    }
+
     try {
-      const parsed = JSON.parse(formatInput);
+      const parsed = JSON.parse(text);
       setFormatOutput(JSON.stringify(parsed, null, 2));
     } catch (e) {
-      setFormatOutput('Invalid JSON');
+      // Best-effort: không phá dữ liệu gốc, chỉ copy sang bên phải
+      setFormatOutput(text);
     }
   };
 
   const formatAsXml = () => {
-    const xml = formatInput
-      .replace(/></g, '>\n<')
+    const xml = formatInput.trim();
+    if (!xml) {
+      setFormatOutput('');
+      return;
+    }
+
+    const formatted = xml
+      .replace(/>\s+</g, '><') // collapse whitespace between tags
+      .replace(/></g, '>\n<') // split tags to lines
       .split('\n')
-      .map(line => line.trim())
+      .reduce(
+        (acc, line) => {
+          const trimmed = line.trim();
+          const closingTag = /^<\/.+>/.test(trimmed);
+          const selfClosing = /\/>$/.test(trimmed) || /^<.+\/>/.test(trimmed);
+          const openingTag = /^<[^/?!][^>]*?>$/.test(trimmed) && !selfClosing;
+
+          let { indent, lines } = acc;
+
+          if (closingTag) {
+            indent = Math.max(indent - 1, 0);
+          }
+
+          const currentIndent = '  '.repeat(indent);
+          lines.push(currentIndent + trimmed);
+
+          if (openingTag) {
+            indent += 1;
+          }
+
+          return { indent, lines };
+        },
+        { indent: 0, lines: [] }
+      ).lines
       .join('\n');
-    setFormatOutput(xml || '');
+
+    setFormatOutput(formatted);
   };
 
   const formatAsRaw = () => {
@@ -156,8 +194,8 @@ const DiffEditor = ({ leftText, rightText, diffResult }) => {
       </div>
       <div
         style={{
-          marginTop: '1rem',
-          padding: '0.75rem',
+          marginTop: '1.25rem',
+          padding: '1rem',
           borderRadius: '0.5rem',
           border: '1px solid #e5e7eb',
           background: '#ffffff'
@@ -235,7 +273,7 @@ const DiffEditor = ({ leftText, rightText, diffResult }) => {
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr 1fr',
-            gap: '0.75rem'
+            gap: '1rem'
           }}
         >
           <div style={{ position: 'relative' }}>
@@ -243,7 +281,7 @@ const DiffEditor = ({ leftText, rightText, diffResult }) => {
               placeholder="Paste any text / JSON / XML here..."
               style={{
                 width: '100%',
-                minHeight: '120px',
+                minHeight: '220px',
                 ...lineStyleBase,
                 fontSize: '0.8rem',
                 borderRadius: '0.375rem',
@@ -276,7 +314,7 @@ const DiffEditor = ({ leftText, rightText, diffResult }) => {
               placeholder="Formatted output"
               style={{
                 width: '100%',
-                minHeight: '120px',
+                minHeight: '220px',
                 ...lineStyleBase,
                 fontSize: '0.8rem',
                 borderRadius: '0.375rem',
